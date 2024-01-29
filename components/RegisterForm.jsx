@@ -11,30 +11,32 @@ export default function RegisterForm() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
         if (!name || !email || !password) {
-            setError("all fields are necessary and cannot be blank")
+            setError("All fields are necessary and cannot be blank");
+            return;
         }
 
-        try {
-            axios.post('/api/userExists', {email})
-            .then((response)=>{
-                axios.post('api/register', {name, email, password})
-                .then(res => {
-                    const form = e.target;
-                    form.reset;
-                    console.log(res.data)
-                })
-            }).catch(()=>{
-                setError('this email is already registered')
-            })
-            
-            } catch (error) {
-                console.log("Error during registration: ", error)
-            }
+        try { 
+            const response = await axios.post('api/register', {name, email, password});
+            const responseData = response.data;
 
+            // Check if the response indicates an error
+            if (responseData.status == 401) {
+                setError(`Email ${email} already registered`);
+                return;
+            } else {
+                // Registration successful
+                const form = e.target;
+                form.reset();
+                console.log(responseData.message, "success");
+            }
+        } catch (err) {
+            setError('Error during registration');
+            console.error("Error during registration:", err);
+        }
     }
 
     return (
